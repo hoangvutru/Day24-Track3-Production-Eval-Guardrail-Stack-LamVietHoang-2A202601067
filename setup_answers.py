@@ -15,6 +15,10 @@ import json
 import os
 import sys
 import time
+import re
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -98,7 +102,24 @@ def run_query(q: str, search, reranker, top_k: int) -> tuple[str, list[str]]:
         except Exception as e:
             print(f"  ⚠️  LLM generation failed: {e}")
 
-    return (contexts[0] if contexts else "Không tìm thấy thông tin."), contexts
+    if not contexts:
+        return "Không tìm thấy thông tin.", contexts
+
+    query_tokens = set(re.findall(r"[\wÀ-ỹ]+", q.casefold()))
+    candidates = []
+    for context in contexts:
+        for sentence in re.split(r"(?<=[.!?])\s+|\n+", context):
+            sentence = sentence.strip(" #-\t")
+            if sentence:
+                tokens = set(re.findall(r"[\wÀ-ỹ]+", sentence.casefold()))
+                candidates.append((len(query_tokens & tokens) / max(len(query_tokens), 1), sentence))
+    selected = []
+    for _, sentence in sorted(candidates, key=lambda item: item[0], reverse=True):
+        if sentence not in selected:
+            selected.append(sentence)
+        if len(selected) == 3:
+            break
+    return " ".join(selected), contexts
 
 
 def main():

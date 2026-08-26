@@ -13,6 +13,7 @@ HF_TOKEN = os.getenv("HF_TOKEN", "")  # Optional: for HuggingFace models
 QDRANT_HOST = "localhost"
 QDRANT_PORT = 6333
 COLLECTION_NAME = "lab24_production"
+NAIVE_COLLECTION = "lab24_naive"
 
 # --- Embedding (same as Day 18) ---
 EMBEDDING_MODEL = "BAAI/bge-m3"
